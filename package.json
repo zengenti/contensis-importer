@@ -1,0 +1,31 @@
+{
+  "name": "contensis-importer-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/app-root-path",
+      "**/app-root-path/**"
+    ]
+  },
+  "scripts": {
+    "prepare": "lerna run prepare",
+    "build": "lerna run build",
+    "import": "lerna run import",
+    "build:import": "lerna run build:import",
+    "bootstrap": "npx lerna bootstrap --force-local && lerna link --force-local",
+    "clean": "lerna clean",
+    "nuke": "rimraf ./node_modules && rimraf ./packages/*/node_modules",
+    "postinstall": "patch-package"
+  },
+  "devDependencies": {
+    "kill-port": "^1.6.1",
+    "lerna": "^4.0.0",
+    "patch-package": "^6.4.7",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.5.5"
+  }
+}

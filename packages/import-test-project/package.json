@@ -1,0 +1,23 @@
+{
+  "name": "import-test-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/importer.js",
+  "scripts": {
+    "build": "rimraf ./dist && tsc",
+    "import": "cross-env COMMIT=false http_proxy=http://127.0.0.1:8888 node dist/importer.js",
+    "build:import": "npm run build && npm run import"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.5.5"
+  },
+  "dependencies": {
+    "aguid": "^2.0.0",
+    "contensis-importer": "1.0.0-alpha.0",
+    "wpapi": "^1.2.2"
+  }
+}

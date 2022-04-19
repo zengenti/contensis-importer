@@ -2,7 +2,7 @@
   "name": "contensis-importer",
   "version": "1.0.0-alpha.0",
   "description": "Easily perform bulk entry extract or loading from or to any Contensis instance",
-  "repository": "https://gitlab.zengenti.com/Internal-Projects/migratortron-1000",
+  "repository": "https://github.com/zengenti/contensis-importer",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
+    "skipLibCheck": true,
     "baseUrl": "./packages",
     "paths": {}
-  }
+  },
+  "exclude": ["node_modules", "**/*.spec.ts"]
 }

@@ -4,7 +4,7 @@ import {
   MigrateRequest,
   SourceCms,
   TargetCms,
-} from 'migratortron-1000';
+} from 'migratortron';
 
 export type GetEntriesOptions = {
   source?: SourceCms | CmsConfiguration;

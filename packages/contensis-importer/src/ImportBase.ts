@@ -4,7 +4,7 @@ import {
   MigrateRequest,
   SourceCms,
   TargetCms,
-} from 'migratortron-1000';
+} from 'migratortron';
 import mapJson from 'jsonpath-mapper';
 
 import { Entry } from 'contensis-management-api/lib/models';

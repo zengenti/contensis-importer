@@ -26,6 +26,17 @@ export type ImportEntriesOptions = {
   transformGuids?: MigrateRequest['transformGuids'];
 };
 
+export type ImportNodesOptions = {
+  target?: TargetCms | CmsConfiguration;
+  projects?: TargetCms['targetProjects'];
+  nodes?: MigrateRequest['nodes'];
+  callback?: MigrateRequest['callback'];
+  concurrency?: MigrateRequest['concurrency'];
+  outputLogs?: MigrateRequest['outputLogs'];
+  outputProgress?: MigrateRequest['outputProgress'];
+  transformGuids?: MigrateRequest['transformGuids'];
+};
+
 export type MappingFunction<S, T = any> =
   | ((json: S, modifiers: { source: S[]; results: T[] }) => T)
   | ((json: S) => T)

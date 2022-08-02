@@ -19,8 +19,8 @@ const contensis = createImport({
 
 const importer = async () => {
   // Write a JSON adapter to get the source data from any external system or API
-  // so we can use the raw JSON data in our Contensis import.
   const wp = await new WordPressJsonAdapter('http://roarnews.co.uk/').get();
+
   // Alternatively a simple "Save as JSON" file export/dump could be imported directly
   // into JavaScript and can be used as a data source for a Contensis import.
 
@@ -38,9 +38,11 @@ const importer = async () => {
   // Finally, trigger the import to load our mapped data into Contensis.
   // We can safely preview imports until we set a COMMIT environment variable.
   const [error, result] = await contensis.ImportEntries();
+
   // ImportEntries will create only the assets/entries that do not exist and
   // update any that have changed since the import was last run.
 
+  // Log output and exit
   if (error) {
     console.error(error);
     process.exit(1);

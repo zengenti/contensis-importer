@@ -7,10 +7,12 @@ import {
 } from 'migratortron';
 import mapJson from 'jsonpath-mapper';
 
-import { Entry } from 'contensis-management-api/lib/models';
+import { Node as DeliveryNode } from 'contensis-delivery-api/lib/models';
+import { Entry, Node } from 'contensis-management-api/lib/models';
 import {
   GetEntriesOptions,
   ImportEntriesOptions,
+  ImportNodesOptions,
   Mappers,
 } from './models/ImportBase.types';
 import { chooseMapperByFieldValue } from './util/mapping';
@@ -33,6 +35,7 @@ export class ImportBase {
   source?: MigrateRequest['source'];
   target?: MigrateRequest['target'];
   entries: Entry[] = [];
+  nodes: Partial<Node | DeliveryNode>[] = [];
   callback?: MigrateRequest['callback'];
   concurrency?: MigrateRequest['concurrency'];
   transformGuids?: MigrateRequest['transformGuids'];
@@ -63,7 +66,7 @@ export class ImportBase {
   }
 
   RunImport = async (): Promise<[Error | undefined, any]> => {
-    return [new Error('Import not implemented'), undefined];
+    return [new Error('RunImport method not implemented'), undefined];
   };
 
   /**
@@ -125,7 +128,7 @@ export class ImportBase {
 
   /**
    * Migrate provided list of entries to projects specfied in an import "target" CMS
-   * entries will be checked against the target for validity and existance
+   * Entries will be checked against the target for validity and existance
    * This should be used for bulk operations and NOT for looping over to do atomic transactions
    * - this is what the Management API is for and will be much faster to load single entries in this fashion
    * ImportEntries respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
@@ -156,6 +159,41 @@ export class ImportBase {
       !this.commit
     );
     return importer.MigrateEntries();
+  };
+
+  /**
+   * Migrate provided list of nodes to projects specfied in an import "target" CMS
+   * Nodes will be checked against the target for validity and existance
+   * This should be used for bulk operations and NOT for looping over to do atomic transactions
+   * - this is what the Management API is for and will be much faster to load single entries in this fashion
+   * ImportNodes respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
+   * @param options provide a list of nodes to import and override options set in the import constructor or set specific options for this import
+   * @returns [Error, MigrateResult] tuple
+   */
+  ImportNodes = ({
+    target = this.target || ({} as TargetCms),
+    projects = (target as TargetCms)?.targetProjects ||
+      this.target?.targetProjects,
+    nodes = this.nodes,
+    callback = this.callback,
+    concurrency = this.concurrency,
+    outputLogs = false,
+    outputProgress = true,
+    transformGuids = this.transformGuids,
+  }: ImportNodesOptions = {}) => {
+    const importer = new ContensisMigrationService(
+      {
+        target: { ...target, targetProjects: projects },
+        nodes,
+        callback,
+        concurrency,
+        outputLogs,
+        outputProgress,
+        transformGuids,
+      },
+      !this.commit
+    );
+    return importer.MigrateNodes();
   };
 }
 

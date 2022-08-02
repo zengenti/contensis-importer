@@ -61,6 +61,14 @@ TODO: provide example
 
 Import any entries supplied in `entries` array to the `target` environment in all `projects` supplied
 
+### ImportNodes
+
+Import any nodes supplied in `nodes` array to the `target` environment in all `projects` supplied.
+
+- You do not need to supply any ids to create or update nodes (except `entryId`)
+- You must supply all "intermediate" nodes before child nodes if they do not already exist in the target project
+  - e.g. for `/my-test/node` you will need to provide a node for `/my-test` as well
+
 ## What is doing the heavy lifting here?
 
 The core of the extract and loading interfaces use existing Migratortron operations, so all of the useful Migratortron functionality is available with sensible defaults set when using it in the context of a custom bulk entry ETL (extract, transform, load) operation such as any typical entry data import.

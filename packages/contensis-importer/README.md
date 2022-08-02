@@ -107,9 +107,31 @@ It is crucial that you understand the guid problem - the way Contensis expects a
 
 ### Simple migration script
 
-I need a simple job doing, the data we are loading is not particularly complicated and only involves one content type.
+I need a simple job doing, the data we are loading is not particularly complicated and only involves one content type. For example updating existing content in one field with new data.
 
 Answer: use the `const importer = createImporter(...)` function, giving you a fully loaded importer back that can `importer.GetEntries(...)` and `importer.ImportEntries(...)` - keep your script simple and as short as possible so it remains manageable.
+
+### Importing content from other systems / data sources
+
+#### JSON Adapter
+
+Ensure your content is available in JSON format - so it can be read by JavaScript. You can write a "JSON Adapter" to load in data from any system that has any kind of interface that can be consumed by JavaScript (e.g. via [npm packages](https://www.npmjs.com/) or HTTP/REST/SOAP/FTP or from various flat file formats such as CSV or XML).
+
+The simplest possible approach would be to find a "Export to JSON" or "Save as JSON" in your source system and you can import that JSON extract directly into JavaScript to read and use the data from it.
+
+#### Mapping source data to Contensis entries
+
+When your data is available you will need to map this data so it represents itself to be the type of Contensis entry we are looking to create. This includes painstakingly recreating all data fields in the right format, and supplying certain `sys` fields such as `sys.id` and `sys.contentTypeId` to create entries and to link to other content.
+
+These mapped "entries" can be pushed to the `importer.entries` array.
+
+#### Finally
+
+Load all supplied entries into Contensis by calling the `importer.ImportEntries` function.
+
+The Import functions will only provide a preview of the import until a `COMMIT` flag or variable is set.
+
+[Example WordPress import script](https://github.com/zengenti/contensis-importer/blob/main/packages/import-test-project/src/importer.ts)
 
 ### Complex migration project
 

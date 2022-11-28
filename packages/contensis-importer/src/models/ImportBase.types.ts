@@ -6,6 +6,22 @@ import {
   TargetCms,
 } from 'migratortron';
 
+export type GetContentModelsOptions = {
+  source?: SourceCms | CmsConfiguration;
+  project?: SourceCms['project'];
+  models?: MigrateRequest['models'];
+  callback?: MigrateRequest['callback'];
+};
+
+export type ImportContentModelsOptions = {
+  target?: TargetCms | CmsConfiguration;
+  projects?: TargetCms['targetProjects'];
+  models?: MigrateRequest['models'];
+  callback?: MigrateRequest['callback'];
+  outputLogs?: MigrateRequest['outputLogs'];
+  outputProgress?: MigrateRequest['outputProgress'];
+};
+
 export type GetEntriesOptions = {
   source?: SourceCms | CmsConfiguration;
   project?: SourceCms['project'];

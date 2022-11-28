@@ -5,7 +5,7 @@
   "main": "dist/importer.js",
   "scripts": {
     "build": "rimraf ./dist && tsc",
-    "import": "cross-env COMMIT=false http_proxy=http://127.0.0.1:8888 node dist/importer.js",
+    "import": "cross-env node dist/importer.js",
     "build:import": "npm run build && npm run import"
   },
   "author": "",
@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "aguid": "^2.0.0",
-    "contensis-importer": "1.0.0-alpha.0",
+    "contensis-importer": "^1.0.0-beta.0",
     "wpapi": "^1.2.2"
   }
 }

@@ -1,5 +1,4 @@
 import {
-  CmsConfiguration,
   ContensisMigrationService,
   MigrateRequest,
   SourceCms,
@@ -10,19 +9,16 @@ import mapJson from 'jsonpath-mapper';
 import { Node as DeliveryNode } from 'contensis-delivery-api/lib/models';
 import { Entry, Node } from 'contensis-management-api/lib/models';
 import {
+  GetContentModelsOptions,
   GetEntriesOptions,
+  ImportContentModelsOptions,
   ImportEntriesOptions,
   ImportNodesOptions,
   Mappers,
 } from './models/ImportBase.types';
 import { chooseMapperByFieldValue } from './util/mapping';
 
-type ImportConstructorArgs = MigrateRequest & {
-  connections?: { [alias: string]: CmsConfiguration };
-  source2?: keyof {
-    [alias: string]: CmsConfiguration;
-  };
-};
+type ImportConstructorArgs = MigrateRequest & {};
 
 type ImportConstructor = (
   args: ImportConstructorArgs,
@@ -30,11 +26,11 @@ type ImportConstructor = (
 ) => ImportBase;
 
 export class ImportBase {
-  Importer = ContensisMigrationService;
   commit: boolean;
   source?: MigrateRequest['source'];
   target?: MigrateRequest['target'];
   entries: Entry[] = [];
+  models: MigrateRequest['models'] = [];
   nodes: Partial<Node | DeliveryNode>[] = [];
   callback?: MigrateRequest['callback'];
   concurrency?: MigrateRequest['concurrency'];
@@ -44,7 +40,6 @@ export class ImportBase {
 
   constructor(
     {
-      connections,
       source,
       target,
       concurrency,
@@ -70,6 +65,56 @@ export class ImportBase {
   };
 
   /**
+   * Get content types, components and compiled "content models" from an import "source" CMS filtering results by a provided query
+   * @param options override options set in the import constructor and set proviede a list of specific content models to fetch
+   * @returns object containing lists of content types, components and content models with data returned from the Management API
+   */
+  GetContentModels = async ({
+    source = this.source || ({} as SourceCms),
+    project = (source as SourceCms)?.project || this.source?.project || '',
+    models = this.models,
+    callback = this.callback,
+  }: GetContentModelsOptions = {}) => {
+    const importer = new ContensisMigrationService({
+      source: { ...source, project },
+      callback,
+      models,
+    });
+    return await importer.GetContentModels();
+  };
+
+  /**
+   * Migrate provided list of content types and/or components to projects specfied in an import "target" CMS
+   * Provided models will be checked against the target for validity and existance
+   * This should be used for bulk operations and NOT for looping over to do atomic transactions
+   * (this is what the Management API is for and will be much faster to load single entries in this fashion)
+   * ImportContentModels respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
+   * @param options provide a list of content types and/or components to import and override options set in the import constructor or set specific options for this import
+   * @returns [Error, ContentTypesResult] tuple
+   */
+  ImportContentModels = ({
+    target = this.target || ({} as TargetCms),
+    projects = (target as TargetCms)?.targetProjects ||
+      this.target?.targetProjects,
+    models = this.models,
+    callback = this.callback,
+    outputLogs = false,
+    outputProgress = true,
+  }: ImportContentModelsOptions = {}) => {
+    const importer = new ContensisMigrationService(
+      {
+        target: { ...target, targetProjects: projects },
+        models,
+        callback,
+        outputLogs,
+        outputProgress,
+      },
+      !this.commit
+    );
+    return importer.MigrateContentModels();
+  };
+
+  /**
    * Get entries from an import "source" CMS filtering results by a provided query
    * @param options override options set in the import constructor and set specific options when getting entries for this query
    * @param withDependents default true fetch any dependency entries when returning entries found in the main query
@@ -82,7 +127,7 @@ export class ImportBase {
     zenQL = this.zenQL,
     callback = this.callback,
     withDependents = true,
-  }: GetEntriesOptions) => {
+  }: GetEntriesOptions = {}) => {
     const importer = new ContensisMigrationService({
       source: { ...source, project },
       query,
@@ -130,7 +175,7 @@ export class ImportBase {
    * Migrate provided list of entries to projects specfied in an import "target" CMS
    * Entries will be checked against the target for validity and existance
    * This should be used for bulk operations and NOT for looping over to do atomic transactions
-   * - this is what the Management API is for and will be much faster to load single entries in this fashion
+   * (this is what the Management API is for and will be much faster to load single entries in this fashion)
    * ImportEntries respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
    * @param options provide a list of entries to import and override options set in the import constructor or set specific options for this import
    * @returns [Error, MigrateResult] tuple
@@ -165,10 +210,10 @@ export class ImportBase {
    * Migrate provided list of nodes to projects specfied in an import "target" CMS
    * Nodes will be checked against the target for validity and existance
    * This should be used for bulk operations and NOT for looping over to do atomic transactions
-   * - this is what the Management API is for and will be much faster to load single entries in this fashion
+   * (this is what the Management API is for and will be much faster to load single entries in this fashion)
    * ImportNodes respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
    * @param options provide a list of nodes to import and override options set in the import constructor or set specific options for this import
-   * @returns [Error, MigrateResult] tuple
+   * @returns [Error, NodesResult] tuple
    */
   ImportNodes = ({
     target = this.target || ({} as TargetCms),

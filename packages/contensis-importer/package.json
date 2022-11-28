@@ -21,6 +21,6 @@
     "aguid": "^2.0.0",
     "deep-cleaner": "^1.2.1",
     "jsonpath-mapper": "^1.1.0",
-    "migratortron": "^1.0.0-beta.7"
+    "migratortron": "^1.0.0-beta.23"
   }
 }

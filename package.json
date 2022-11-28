@@ -13,7 +13,7 @@
   },
   "scripts": {
     "prepare": "lerna run prepare",
-    "build": "lerna run build",
+    "build": "lerna run build --stream",
     "import": "lerna run import",
     "build:import": "lerna run build:import",
     "bootstrap": "npx lerna bootstrap --force-local && lerna link --force-local",

@@ -11,6 +11,7 @@ import { Entry, Node } from 'contensis-management-api/lib/models';
 import {
   GetContentModelsOptions,
   GetEntriesOptions,
+  GetNodesOptions,
   ImportContentModelsOptions,
   ImportEntriesOptions,
   ImportNodesOptions,
@@ -204,6 +205,27 @@ export class ImportBase {
       !this.commit
     );
     return importer.MigrateEntries();
+  };
+
+  /**
+   * Get nodes from an import "source" CMS filtering results by a provided query
+   * @param options override options set in the import constructor and set specific options when getting node for this query
+   * @returns list of nodes returned from the Management API
+   */
+  GetNodes = async ({
+    rootPath,
+    depth,
+    source = this.source || ({} as SourceCms),
+    project = (source as SourceCms)?.project || this.source?.project || '',
+    query = this.query,
+    callback = this.callback,
+  }: GetNodesOptions = {}) => {
+    const importer = new ContensisMigrationService({
+      source: { ...source, project },
+      query,
+      callback,
+    });
+    return await importer.GetNodes(rootPath, depth);
   };
 
   /**

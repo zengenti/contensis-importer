@@ -1860,10 +1860,10 @@ contensis-core-api@1.0.5, contensis-core-api@^1.0.5:
     es6-promise "^4.2.6"
     tslib "^1.9.3"
 
-contensis-delivery-api@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.npmjs.org/contensis-delivery-api/-/contensis-delivery-api-1.2.0.tgz"
-  integrity sha512-aDT8slJ9DTk7l50ZxP3K8nj8tH8QZodx2hwBW507xXKOlc7oLEm4EYk1pncC54tQdRwwLp1lABkJ9wCJiRUYsw==
+contensis-delivery-api@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/contensis-delivery-api/-/contensis-delivery-api-1.3.0.tgz#5dabfa95364552788fee98204d998296ebc7eaf6"
+  integrity sha512-j7iVtEaoaRd7CR1WwNr350vHFc5P8gTfB6HUlf91sWrus6/eIgNC2h7qL8VDhZRRMO2JGz6Aknb6DbjONF2pdA==
   dependencies:
     contensis-core-api "1.0.5"
     cross-fetch "^3.1.5"
@@ -1871,10 +1871,10 @@ contensis-delivery-api@^1.2.0:
     tslib "^1.10.0"
     whatwg-fetch "^3.0.0"
 
-contensis-management-api@^2.1.1:
-  version "2.1.1"
-  resolved "https://registry.npmjs.org/contensis-management-api/-/contensis-management-api-2.1.1.tgz"
-  integrity sha512-GZ0CfV1Zh3TuhV2L/B2BUc6gdm/vYc43oFB3LDSRUWTXOe2jbsAmCRcb9066B1bE15LZ8PDWM7xwUGRLNNbe3Q==
+contensis-management-api@^2.1.8:
+  version "2.1.8"
+  resolved "https://registry.yarnpkg.com/contensis-management-api/-/contensis-management-api-2.1.8.tgz#35d7d3bfe0ebf241d1ef023805227f3b7e102fb1"
+  integrity sha512-18EAAeI4aqp45lO787roahjfHkVPgMbAdou7ZMStCLSkUjr+7kDQn1Pi5rzc+Waamc5ZSYifxHpv5/Mdph7wjg==
   dependencies:
     "@types/graceful-fs" "^4.1.3"
     contensis-core-api "1.0.5"
@@ -3008,9 +3008,9 @@ fs.realpath@^1.0.0:
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
 
 fsevents@~2.3.2:
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.2.tgz#8a526f78b8fdf4623b709e0b975c52c24c02fd1a"
-  integrity sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==
+  version "2.3.3"
+  resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
+  integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
 
 function-bind@^1.1.1:
   version "1.1.1"
@@ -4365,6 +4365,11 @@ mkdirp@^1.0.3, mkdirp@^1.0.4:
   version "1.0.4"
   resolved "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
+
+mocha-suppress-logs@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/mocha-suppress-logs/-/mocha-suppress-logs-0.3.1.tgz#e0fb454daea9e65e4aced488c26e5000691ed598"
+  integrity sha512-Iu6jyTguAtFzmt7l4Agfnve0v+cQNbH92iMau1kjWwom7MNn18/Mzo1EaVhwDrH24cQ87RDKAMse2rDUkuXy8A==
 
 mocha@^9.1.1:
   version "9.2.2"

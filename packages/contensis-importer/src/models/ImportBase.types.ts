@@ -42,6 +42,15 @@ export type ImportEntriesOptions = {
   transformGuids?: MigrateRequest['transformGuids'];
 };
 
+export type GetNodesOptions = {
+  rootPath?: string;
+  depth?: number;
+  source?: SourceCms | CmsConfiguration;
+  project?: SourceCms['project'];
+  query?: MigrateRequest['query'];
+  callback?: MigrateRequest['callback'];
+};
+
 export type ImportNodesOptions = {
   target?: TargetCms | CmsConfiguration;
   projects?: TargetCms['targetProjects'];

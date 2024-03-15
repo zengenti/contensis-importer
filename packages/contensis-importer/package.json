@@ -14,13 +14,12 @@
   "license": "None",
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.7.4"
+    "rimraf": "^3.0.2"
   },
   "dependencies": {
     "aguid": "^2.0.0",
     "deep-cleaner": "^1.2.1",
     "jsonpath-mapper": "^1.1.0",
-    "migratortron": "^1.0.0-beta.40"
+    "migratortron": "^1.0.0-beta.43"
   }
 }

@@ -26,7 +26,7 @@ type ImportConstructor = (
   commit?: boolean
 ) => ImportBase;
 
-export class ImportBase {
+export class ImportBase implements ImportConstructorArgs {
   commit: boolean;
   source?: MigrateRequest['source'];
   target?: MigrateRequest['target'];
@@ -38,6 +38,9 @@ export class ImportBase {
   transformGuids?: MigrateRequest['transformGuids'];
   query?: MigrateRequest['query'];
   zenQL?: MigrateRequest['zenQL'];
+  outputLogs: MigrateRequest['outputLogs'] = 'warning';
+  outputProgress: MigrateRequest['outputProgress'] = true;
+  extraArgs: Partial<MigrateRequest>;
 
   constructor(
     {
@@ -47,6 +50,9 @@ export class ImportBase {
       transformGuids = false,
       query,
       zenQL,
+      outputLogs,
+      outputProgress,
+      ...extraArgs
     }: ImportConstructorArgs,
     commit = false
   ) {
@@ -59,6 +65,9 @@ export class ImportBase {
     this.transformGuids = transformGuids;
     this.query = query;
     this.zenQL = zenQL;
+    this.outputLogs = outputLogs;
+    this.outputProgress = outputProgress;
+    this.extraArgs = extraArgs || {};
   }
 
   RunImport = async (): Promise<[Error | undefined, any]> => {
@@ -75,11 +84,15 @@ export class ImportBase {
     project = (source as SourceCms)?.project || this.source?.project || '',
     models = this.models,
     callback = this.callback,
+    outputLogs = 'warning',
+    outputProgress = true,
   }: GetContentModelsOptions = {}) => {
     const importer = new ContensisMigrationService({
       source: { ...source, project },
       callback,
       models,
+      outputLogs,
+      outputProgress,
     });
     return await importer.GetContentModels();
   };
@@ -99,11 +112,12 @@ export class ImportBase {
       this.target?.targetProjects,
     models = this.models,
     callback = this.callback,
-    outputLogs = false,
-    outputProgress = true,
+    outputLogs = this.outputLogs,
+    outputProgress = this.outputProgress,
   }: ImportContentModelsOptions = {}) => {
     const importer = new ContensisMigrationService(
       {
+        ...this.extraArgs,
         target: { ...target, targetProjects: projects },
         models,
         callback,
@@ -128,12 +142,16 @@ export class ImportBase {
     zenQL = this.zenQL,
     callback = this.callback,
     withDependents = true,
+    outputLogs = 'warning',
+    outputProgress = true,
   }: GetEntriesOptions = {}) => {
     const importer = new ContensisMigrationService({
       source: { ...source, project },
       query,
       zenQL,
       callback,
+      outputLogs,
+      outputProgress,
     });
     return await importer.GetEntries({ withDependents });
   };
@@ -157,7 +175,7 @@ export class ImportBase {
     field = 'sys.contentTypeId'
   ) => {
     const results = [] as T[];
-    entries.map(entry => {
+    entries.forEach(entry => {
       const mapper = chooseMapperByFieldValue(entry, mappers, field);
       if (typeof mapper === 'function') {
         const result = mapper(entry, {
@@ -188,12 +206,13 @@ export class ImportBase {
     entries = this.entries,
     callback = this.callback,
     concurrency = this.concurrency,
-    outputLogs = false,
-    outputProgress = true,
+    outputLogs = this.outputLogs,
+    outputProgress = this.outputProgress,
     transformGuids = this.transformGuids,
   }: ImportEntriesOptions = {}) => {
     const importer = new ContensisMigrationService(
       {
+        ...this.extraArgs,
         target: { ...target, targetProjects: projects },
         entries,
         callback,
@@ -219,11 +238,15 @@ export class ImportBase {
     project = (source as SourceCms)?.project || this.source?.project || '',
     query = this.query,
     callback = this.callback,
+    outputLogs = 'warning',
+    outputProgress = true,
   }: GetNodesOptions = {}) => {
     const importer = new ContensisMigrationService({
       source: { ...source, project },
       query,
       callback,
+      outputLogs,
+      outputProgress,
     });
     return await importer.GetNodes(rootPath, depth);
   };
@@ -244,12 +267,13 @@ export class ImportBase {
     nodes = this.nodes,
     callback = this.callback,
     concurrency = this.concurrency,
-    outputLogs = false,
-    outputProgress = true,
+    outputLogs = this.outputLogs,
+    outputProgress = this.outputProgress,
     transformGuids = this.transformGuids,
   }: ImportNodesOptions = {}) => {
     const importer = new ContensisMigrationService(
       {
+        ...this.extraArgs,
         target: { ...target, targetProjects: projects },
         nodes,
         callback,

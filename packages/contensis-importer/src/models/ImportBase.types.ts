@@ -6,21 +6,24 @@ import {
   TargetCms,
 } from 'migratortron';
 
+type LoggingOptions = {
+  outputLogs?: MigrateRequest['outputLogs'];
+  outputProgress?: MigrateRequest['outputProgress'];
+};
+
 export type GetContentModelsOptions = {
   source?: SourceCms | CmsConfiguration;
   project?: SourceCms['project'];
   models?: MigrateRequest['models'];
   callback?: MigrateRequest['callback'];
-};
+} & LoggingOptions;
 
 export type ImportContentModelsOptions = {
   target?: TargetCms | CmsConfiguration;
   projects?: TargetCms['targetProjects'];
   models?: MigrateRequest['models'];
   callback?: MigrateRequest['callback'];
-  outputLogs?: MigrateRequest['outputLogs'];
-  outputProgress?: MigrateRequest['outputProgress'];
-};
+} & LoggingOptions;
 
 export type GetEntriesOptions = {
   source?: SourceCms | CmsConfiguration;
@@ -29,7 +32,7 @@ export type GetEntriesOptions = {
   zenQL?: MigrateRequest['zenQL'];
   callback?: MigrateRequest['callback'];
   withDependents?: boolean;
-};
+} & LoggingOptions;
 
 export type ImportEntriesOptions = {
   target?: TargetCms | CmsConfiguration;
@@ -37,10 +40,8 @@ export type ImportEntriesOptions = {
   entries?: MigrateRequest['entries'];
   callback?: MigrateRequest['callback'];
   concurrency?: MigrateRequest['concurrency'];
-  outputLogs?: MigrateRequest['outputLogs'];
-  outputProgress?: MigrateRequest['outputProgress'];
   transformGuids?: MigrateRequest['transformGuids'];
-};
+} & LoggingOptions;
 
 export type GetNodesOptions = {
   rootPath?: string;
@@ -49,7 +50,7 @@ export type GetNodesOptions = {
   project?: SourceCms['project'];
   query?: MigrateRequest['query'];
   callback?: MigrateRequest['callback'];
-};
+} & LoggingOptions;
 
 export type ImportNodesOptions = {
   target?: TargetCms | CmsConfiguration;
@@ -57,10 +58,8 @@ export type ImportNodesOptions = {
   nodes?: MigrateRequest['nodes'];
   callback?: MigrateRequest['callback'];
   concurrency?: MigrateRequest['concurrency'];
-  outputLogs?: MigrateRequest['outputLogs'];
-  outputProgress?: MigrateRequest['outputProgress'];
   transformGuids?: MigrateRequest['transformGuids'];
-};
+} & LoggingOptions;
 
 export type MappingFunction<S, T = any> =
   | ((json: S, modifiers: { source: S[]; results: T[] }) => T)

@@ -5,15 +5,14 @@
   "main": "dist/importer.js",
   "scripts": {
     "build": "rimraf ./dist && tsc",
-    "import": "cross-env node dist/importer.js",
+    "import": "cross-env node --inspect=9229 dist/importer.js",
     "build:import": "npm run build && npm run import"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.5.5"
+    "rimraf": "^3.0.2"
   },
   "dependencies": {
     "aguid": "^2.0.0",

@@ -21,6 +21,7 @@ export const mapWpPostToEntry = (post: any) => {
       : null,
     content: post.content.rendered,
     sys: {
+      isPublished: true,
       contentTypeId: 'post',
       dataFormat: 'entry',
       id: aguid(`post-${post.id}`),
@@ -44,6 +45,7 @@ export const mapWpMediaToEntry = (media: any) =>
       $return: (title, root) => title || getFilename(root),
     },
     sys: {
+      isPublished: true,
       contentTypeId: () => 'image',
       dataFormat: () => 'asset',
       id: ({ id }) => aguid(`image-${id}`),

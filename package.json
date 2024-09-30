@@ -16,7 +16,7 @@
     "build": "lerna run build --stream",
     "import": "lerna run import",
     "build:import": "lerna run build:import",
-    "bootstrap": "npx lerna bootstrap --force-local && lerna link --force-local",
+    "bootstrap": "npx lerna bootstrap --force-local && lerna link --force-local && lerna run package-lock",
     "clean": "lerna clean",
     "nuke": "rimraf ./node_modules && rimraf ./packages/*/node_modules",
     "postinstall": "patch-package"

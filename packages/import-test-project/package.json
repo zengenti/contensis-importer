@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rimraf ./dist && tsc",
     "import": "cross-env node --inspect=9229 dist/importer.js",
-    "build:import": "npm run build && npm run import"
+    "build:import": "npm run build && npm run import",
+    "package-lock": "npm i --package-lock-only --workspaces false"
   },
   "author": "",
   "license": "ISC",

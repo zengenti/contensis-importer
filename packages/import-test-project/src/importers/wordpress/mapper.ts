@@ -45,7 +45,7 @@ export const mapWpMediaToEntry = (media: any) =>
       $return: (title, root) => title || getFilename(root),
     },
     sys: {
-      isPublished: true,
+      isPublished: () => true,
       contentTypeId: () => 'image',
       dataFormat: () => 'asset',
       id: ({ id }) => aguid(`image-${id}`),

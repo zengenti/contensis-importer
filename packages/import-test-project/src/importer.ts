@@ -14,7 +14,7 @@ target.targetProjects = ['wordPressSite'];
 const contensis = createImport({
   target,
   concurrency: 3, // load entries in parallel
-  transformGuids: true, // for demo purposes
+  transformGuids: false, // true when the same data is imported to multiple projects
 });
 
 const importer = async () => {

@@ -1,4 +1,5 @@
 import MappingTemplate from 'jsonpath-mapper/dist/models/Template';
+
 import {
   CmsConfiguration,
   MigrateRequest,
@@ -43,6 +44,8 @@ export type ImportEntriesOptions = {
   transformGuids?: MigrateRequest['transformGuids'];
 } & LoggingOptions;
 
+export type DeleteEntriesOptions = ImportEntriesOptions & { recycle?: boolean };
+
 export type GetNodesOptions = {
   rootPath?: string;
   depth?: number;
@@ -59,6 +62,14 @@ export type ImportNodesOptions = {
   callback?: MigrateRequest['callback'];
   concurrency?: MigrateRequest['concurrency'];
   transformGuids?: MigrateRequest['transformGuids'];
+} & LoggingOptions;
+
+export type DeleteNodesOptions = {
+  rootPaths: string | string[];
+  target?: TargetCms | CmsConfiguration;
+  projects?: TargetCms['targetProjects'];
+  callback?: MigrateRequest['callback'];
+  concurrency?: MigrateRequest['concurrency'];
 } & LoggingOptions;
 
 export type MappingFunction<S, T = any> =

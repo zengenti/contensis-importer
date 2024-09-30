@@ -9,6 +9,8 @@ import mapJson from 'jsonpath-mapper';
 import { Node as DeliveryNode } from 'contensis-delivery-api/lib/models';
 import { Entry, Node } from 'contensis-management-api/lib/models';
 import {
+  DeleteEntriesOptions,
+  DeleteNodesOptions,
   GetContentModelsOptions,
   GetEntriesOptions,
   GetNodesOptions,
@@ -196,7 +198,7 @@ export class ImportBase implements ImportConstructorArgs {
    * This should be used for bulk operations and NOT for looping over to do atomic transactions
    * (this is what the Management API is for and will be much faster to load single entries in this fashion)
    * ImportEntries respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
-   * @param options provide a list of entries to import and override options set in the import constructor or set specific options for this import
+   * @param options provide a list of entries to import and override options set in the import constructorto set specific options for this import
    * @returns [Error, MigrateResult] tuple
    */
   ImportEntries = ({
@@ -224,6 +226,43 @@ export class ImportBase implements ImportConstructorArgs {
       !this.commit
     );
     return importer.MigrateEntries();
+  };
+
+  /**
+   * Delete provided list of entries in projects specfied as a "target" CMS
+   * Entries will be checked against the target for validity and existance
+   * This should be used for bulk operations and NOT for looping over to do atomic transactions
+   * (this is what the Management API is for and will be much faster to load single entries in this fashion)
+   * DeleteEntries respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
+   * @param options provide a list of entries to delete and override options set in the import constructor to set specific options for this import
+   * @returns [Error, MigrateResult] tuple
+   */
+  DeleteEntries = ({
+    target = this.target || ({} as TargetCms),
+    projects = (target as TargetCms)?.targetProjects ||
+      this.target?.targetProjects,
+    entries = this.entries,
+    recycle = false,
+    callback = this.callback,
+    concurrency = this.concurrency,
+    outputLogs = this.outputLogs,
+    outputProgress = this.outputProgress,
+    transformGuids = this.transformGuids,
+  }: DeleteEntriesOptions = {}) => {
+    const importer = new ContensisMigrationService(
+      {
+        ...this.extraArgs,
+        target: { ...target, targetProjects: projects },
+        entries,
+        callback,
+        concurrency,
+        outputLogs,
+        outputProgress,
+        transformGuids,
+      },
+      !this.commit
+    );
+    return importer.DeleteEntries(recycle);
   };
 
   /**
@@ -257,7 +296,7 @@ export class ImportBase implements ImportConstructorArgs {
    * This should be used for bulk operations and NOT for looping over to do atomic transactions
    * (this is what the Management API is for and will be much faster to load single entries in this fashion)
    * ImportNodes respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
-   * @param options provide a list of nodes to import and override options set in the import constructor or set specific options for this import
+   * @param options provide a list of nodes to import and override options set in the import constructor to set specific options for this import
    * @returns [Error, NodesResult] tuple
    */
   ImportNodes = ({
@@ -285,6 +324,37 @@ export class ImportBase implements ImportConstructorArgs {
       !this.commit
     );
     return importer.MigrateNodes();
+  };
+
+  /**
+   * Delete nodes and any children from the provided root path(s) from projects specfied as a "target" CMS
+   * Nodes will be checked against the target for validity and existance
+   * DeleteNodes respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
+   * @param options provide a list of nodes to delete and override options set in the import constructor to set specific options for this import
+   * @returns [Error, NodesResult] tuple
+   */
+  DeleteNodes = ({
+    target = this.target || ({} as TargetCms),
+    projects = (target as TargetCms)?.targetProjects ||
+      this.target?.targetProjects,
+    callback = this.callback,
+    concurrency = this.concurrency,
+    outputLogs = this.outputLogs,
+    outputProgress = this.outputProgress,
+    rootPaths,
+  }: DeleteNodesOptions) => {
+    const importer = new ContensisMigrationService(
+      {
+        ...this.extraArgs,
+        target: { ...target, targetProjects: projects },
+        callback,
+        concurrency,
+        outputLogs,
+        outputProgress,
+      },
+      !this.commit
+    );
+    return importer.DeleteNodes(rootPaths);
   };
 }
 

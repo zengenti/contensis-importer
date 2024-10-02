@@ -1,5 +1,6 @@
 import {
   ContensisMigrationService,
+  EntriesResult,
   MigrateRequest,
   SourceCms,
   TargetCms,
@@ -237,7 +238,7 @@ export class ImportBase implements ImportConstructorArgs {
    * @param options provide a list of entries to delete and override options set in the import constructor to set specific options for this import
    * @returns [Error, MigrateResult] tuple
    */
-  DeleteEntries = ({
+  DeleteEntries = async ({
     target = this.target || ({} as TargetCms),
     projects = (target as TargetCms)?.targetProjects ||
       this.target?.targetProjects,
@@ -248,7 +249,11 @@ export class ImportBase implements ImportConstructorArgs {
     outputLogs = this.outputLogs,
     outputProgress = this.outputProgress,
     transformGuids = this.transformGuids,
-  }: DeleteEntriesOptions = {}) => {
+  }: DeleteEntriesOptions = {}): Promise<
+    [Error | null, EntriesResult | undefined]
+  > => {
+    if (!entries.length)
+      return [new Error('No entries supplied to delete'), undefined];
     const importer = new ContensisMigrationService(
       {
         ...this.extraArgs,

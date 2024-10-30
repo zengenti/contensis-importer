@@ -1,30 +1,97 @@
-# Contensis importer
+# Contensis importer [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![NPM version](https://img.shields.io/npm/v/contensis-importer.svg?style=flat)](https://www.npmjs.com/package/contensis-importer)
 
-Consolidating data into Contensis with JavaScript or TypeScript
+Consolidating or updating data into Contensis with JavaScript or TypeScript
 
 ## What is it?
 
-Contensis importer provides a series of interfaces to easily perform bulk entry extract or loading from or to any Contensis instance
+Contensis importer provides a series of interfaces to easily perform bulk entry extract or loading to and/or from any Contensis instance
 
-### ImportBase or createImporter
+### Get started
+
+Create a new npm project in a folder by running `npm init` in a terminal, or install the package into an existing npm project.
+
+Install the `contensis-importer` package from npm.js
+
+```sh
+npm install --save contensis-importer aguid
+```
+
+Other recommended packages:
+
+- `aguid` installed above allows us to generate deterministic guids (guids that are always generated the same way given the same input) to map to our `sys.id` attribute in our entries if we are mapping external data that does not have its own guid ([example](https://github.com/zengenti/contensis-importer/blob/main/packages/import-test-project/src/importers/wordpress/mapper.ts#L27)).
+
+Recommended development packages:
+
+```sh
+npm install --save-dev cross-env typescript
+```
+
+- `cross-env` enables us to define environment variables in our npm scripts
+
+  example npm script: `"import:dev": "cross-env TARGET=dev COMMIT=false node ."` will target our connection we've aliased as `dev` and will not commit the result of the import when this script is run in our project
+
+- `typescript` allows us to use TypeScript in our project
+
+> **TypeScript starters**
+>
+> After installing TypeScript to a new project also initialise the TypeScript project
+>
+> `npx tsc --init`
+
+### ImportBase or createImport
+
+Create a new file in your project called `index.ts`
 
 ```typescript
-const importer = createImporter(...)
+import { createImport } from 'contensis-importer';
+
+const contensis = createImport({ ...options });
+
+const importer = async () => {
+  const entries = await contensis.GetEntries({
+    zenQL: 'sys.contentTypeId = news',
+  });
+};
+
+// Inline function to run the importer
+(async () => await importer())();
 ```
 
 or
 
 ```typescript
-class NewsImport extends ImportBase { ... }
+import { ImportBase } from 'contensis-importer';
+
+class NewsImport extends ImportBase {
+  RunImport = async (): Promise<[Error | undefined, any]> => {
+    try {
+      const entries = await this.GetEntries({
+        zenQL: 'sys.contentTypeId = news',
+      });
+      return [, entries];
+    } catch (ex: any) {
+      return [ex, undefined];
+    }
+  };
+}
+
+// Instantiate our NewsImport class somewhere in code (with any other Import classes)
+const newsImporter = new NewsImport({ ...options });
+// Execute the RunImport method
+const [error, result] = await newsImporter.RunImport();
 ```
 
-Either approach works the same, it can be a preferred coding style or it may be better to handle more complex jobs with an import class.
+Either approach works the same, it can be a preferred coding style or it may be better to handle more complex jobs with multiple separately defined import classes.
+
+> **TypeScript starters**
+>
+> Test your script compiles by running `npx tsc` and launch the compiled `index.js` script by running `node .`
 
 #### Connection details
 
 If you are already familiar with the Migratortron and how entry load operations work this is almost exactly the same.
 
-The best way to get familiar is to create an importer using one of the methods above and examine the availalble options to set `source`, `target` and other import parameters.
+The best way to get familiar is to create an importer using one of the methods above and examine the availalble options to set `source`, `target` and other import parameters. A complete example of defining connections is in the [example project](https://github.com/zengenti/contensis-importer/blob/main/packages/import-test-project/src/connections.ts)
 
 Any parameters you set when creating the importer are used as defaults when calling any importer methods, however you can also override these when calling any importer method and set different parameters for one or any of the importer methods you call. e.g. always `GetEntries` from live CMS and load into the default importer environment - could be dev or live, or just a different Contensis project
 
@@ -53,9 +120,29 @@ type GetEntries = ({
 
 Taking an array of entries (and all dependency entries) of any given content type and a keyed mapping object that will apply a discrete mapping function to an entry matching a mapping object key to the entry `sys.contentTypeId` field.
 
-```typescript
-TODO: provide example
+The example will take an array of `entries` and for every `news` entry, the `headline` field will be appended with ` - updated`
+
+```javascript
+const newEntries = importer.MapEntries(entries, {
+  news: e => {
+    e.headline = `${e.headline} - updated`;
+    return e;
+  },
+});
 ```
+
+Adding additional type arguments in TypeScript projects will allow us to use any types we have defined to map each `news` entry with a `NewsEntry` type and will cast our `newEntries` variable as an array of the given `ImportEntry` type
+
+```typescript
+const newEntries = importer.MapEntries<ImportEntry>(entries, {
+  news: (e: NewsEntry) => {
+    e.headline = `${e.headline} - updated`;
+    return e;
+  },
+});
+```
+
+Add more keys and discrete content type mappers for the entry types you are handling
 
 ### ImportEntries
 
@@ -109,7 +196,7 @@ It is crucial that you understand the guid problem - the way Contensis expects a
 
 I need a simple job doing, the data we are loading is not particularly complicated and only involves one content type. For example updating existing content in one field with new data.
 
-Answer: use the `const importer = createImporter(...)` function, giving you a fully loaded importer back that can `importer.GetEntries(...)` and `importer.ImportEntries(...)` - keep your script simple and as short as possible so it remains manageable.
+Answer: use the `const importer = createImport(...)` function, giving you a fully loaded importer back that can `importer.GetEntries(...)` and `importer.ImportEntries(...)` - keep your script simple and as short as possible so it remains manageable.
 
 ### Importing content from other systems / data sources
 

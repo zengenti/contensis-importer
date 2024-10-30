@@ -15,7 +15,7 @@ class WordPressJsonAdapter {
 
   get = async () => {
     const { api, errors } = this;
-    const [perror, posts] = await api.posts();
+    const [perror, posts = []] = await api.posts();
     if (perror) errors.push(perror);
 
     for (const post of posts) {
@@ -32,11 +32,11 @@ class WordPressJsonAdapter {
     return this;
   };
   api = {
-    posts: () => to(this.wp.posts()) as Promise<[Error, any[]]>,
+    posts: () => to(this.wp.posts()) as Promise<[Error, any[] | undefined]>,
 
     media: (id?: string) => {
       if (id) return to(this.wp.media().id(id)) as Promise<[Error, any]>;
-      return to(this.wp.media()) as Promise<[Error, any[]]>;
+      return to(this.wp.media()) as Promise<[Error, any[] | undefined]>;
     },
   };
 }

@@ -14,12 +14,11 @@
   "license": "None",
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "rimraf": "^3.0.2"
+    "rimraf": "^6.0.1"
   },
   "dependencies": {
     "aguid": "^2.0.0",
     "deep-cleaner": "^1.2.1",
-    "jsonpath-mapper": "^1.1.0",
     "migratortron": "^1.0.0-beta.66"
   }
 }

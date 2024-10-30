@@ -1,22 +1,22 @@
 {
   "folders": [
-	{
-		"name": "✨ root",
-		"path": "."
-	},
-	{
-		"name": "📦 contensis-importer",
-		"path": ".\\packages\\contensis-importer"
-	},
-	{
-		"name": "📦 import-test-project",
-		"path": ".\\packages\\import-test-project"
-	},
-	{
-		"name": "📦 migratortron-1000",
-		"path": ".\\packages\\migratortron-1000"
-	}
-],
+    {
+      "name": "✨ contensis-importer-monorepo",
+      "path": "."
+    },
+    {
+      "name": "📦 contensis-importer",
+      "path": "packages\\contensis-importer"
+    },
+    {
+      "name": "📦 import-test-project",
+      "path": "packages\\import-test-project"
+    },
+    {
+      "name": "📦 migratortron-1000",
+      "path": "packages\\migratortron-1000"
+    }
+  ],
   "settings": {
     "eslint.alwaysShowStatus": false,
     "html.format.enable": true,

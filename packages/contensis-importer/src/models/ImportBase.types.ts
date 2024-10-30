@@ -1,4 +1,4 @@
-import mapJson from 'jsonpath-mapper';
+import { MappingTemplate } from 'jsonpath-mapper';
 
 import {
   CmsConfiguration,
@@ -78,5 +78,5 @@ export type MappingFunction<S, T = any> =
   | (() => T | void);
 
 export type Mappers<S, T = any> = {
-  [contentTypeId: string]: MappingFunction<S, T> | Parameters<typeof mapJson>[1];
+  [contentTypeId: string]: MappingFunction<S, T> | MappingTemplate<S>;
 };

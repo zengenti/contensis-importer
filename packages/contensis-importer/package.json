@@ -8,7 +8,8 @@
   "scripts": {
     "prebuild": "node -p \"'export const LIB_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/util/version.ts",
     "prepack": "npm run build",
-    "build": "rimraf ./dist && tsc"
+    "build": "rimraf ./dist && tsc",
+    "package-lock": "npm i --package-lock-only --workspaces false"
   },
   "author": "Neil Flatley",
   "license": "None",
@@ -19,6 +20,6 @@
   "dependencies": {
     "aguid": "^2.0.0",
     "deep-cleaner": "^1.2.1",
-    "migratortron": "^1.0.0-beta.66"
+    "migratortron": "^1.0.0-beta.67"
   }
 }

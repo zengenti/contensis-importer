@@ -6,6 +6,7 @@ import {
   SourceCms,
   TargetCms,
 } from 'migratortron';
+import { Entry } from '../index';
 
 type LoggingOptions = {
   outputLogs?: MigrateRequest['outputLogs'];
@@ -72,11 +73,8 @@ export type DeleteNodesOptions = {
   concurrency?: MigrateRequest['concurrency'];
 } & LoggingOptions;
 
-export type MappingFunction<S, T = any> =
-  | ((json: S, modifiers: { source: S[]; results: T[] }) => T)
-  | ((json: S) => T)
-  | (() => T | void);
-
-export type Mappers<S, T = any> = {
-  [contentTypeId: string]: MappingFunction<S, T> | MappingTemplate<S>;
+export type Mappers<S extends Entry = Entry, T extends Entry = Entry> = {
+  [contentTypeId: string]:
+    | MappingTemplate<S>
+    | ((json: any, modifiers: { source: S[]; results: T[] }) => T | S);
 };

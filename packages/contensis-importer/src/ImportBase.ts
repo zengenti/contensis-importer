@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import {
   ContensisMigrationService,
   EntriesResult,
@@ -59,6 +60,17 @@ export class ImportBase implements ImportConstructorArgs {
     }: ImportConstructorArgs,
     commit = false
   ) {
+    console.log(
+      chalk.greenBright(`            ..      
+      ... .. ..     
+   ......... ....   
+   ..  ..... . ..   Contensis importer
+   ..   ... .  ..   
+   .......    ..    
+       .......  
+`)
+    );
+
     // Set a preview/commit flag via calling script,
     // ensure COMMIT is false by default
     this.commit = process.env.COMMIT === 'true' || commit;
@@ -138,7 +150,7 @@ export class ImportBase implements ImportConstructorArgs {
    * @param withDependents default true fetch any dependency entries when returning entries found in the main query
    * @returns list of entries returned from the Management API
    */
-  GetEntries = async ({
+  GetEntries = async <T extends Entry = Entry>({
     source = this.source || ({} as SourceCms),
     project = (source as SourceCms)?.project || this.source?.project || '',
     query = this.query,
@@ -156,7 +168,7 @@ export class ImportBase implements ImportConstructorArgs {
       outputLogs,
       outputProgress,
     });
-    return await importer.GetEntries({ withDependents });
+    return (await importer.GetEntries({ withDependents })) as T[];
   };
 
   /**
@@ -172,20 +184,24 @@ export class ImportBase implements ImportConstructorArgs {
    * a default mapper template, returns an empty object if no mapper template
    * couild be applied.
    */
-  MapEntries = <T = Entry, S = Entry>(
-    entries: S[],
+  MapEntries = <T extends Entry = Entry, S extends Entry = Entry>(
+    entries: Entry[] | S[],
     mappers: Mappers<S, T>,
     field = 'sys.contentTypeId'
   ) => {
     const results = [] as T[];
     entries.forEach(entry => {
-      const mapper = chooseMapperByFieldValue(entry, mappers, field);
+      const mapper = chooseMapperByFieldValue<S, Mappers<S, T>>(
+        entry as S,
+        mappers,
+        field
+      );
       if (typeof mapper === 'function') {
-        const result = mapper(entry, {
-          source: entries,
+        const result = mapper(entry as S, {
+          source: entries as S[],
           results,
         });
-        if (result) results.push(result);
+        if (result) results.push(result as T);
       } else if (mapper && typeof mapper === 'object')
         results.push(mapJson(entry as S, mapper));
     });

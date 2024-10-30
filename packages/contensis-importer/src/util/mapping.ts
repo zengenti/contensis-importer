@@ -54,7 +54,10 @@ export const generateNewAsset = (
   return newAsset;
 };
 
-export const chooseMapperByFieldValue = <S, T extends Mappers<S>>(
+export const chooseMapperByFieldValue = <
+  S extends Entry,
+  T extends Mappers<S, any> = Mappers<S, Entry>,
+>(
   entry: S,
   mappers: T,
   field = 'sys.contentTypeId'

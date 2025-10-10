@@ -1,10 +1,10 @@
 # Contensis importer [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![NPM version](https://img.shields.io/npm/v/contensis-importer.svg?style=flat)](https://www.npmjs.com/package/contensis-importer)
 
-Consolidating or updating data into Contensis with JavaScript or TypeScript
+Bulk load or maintain Contensis content with JavaScript or TypeScript
 
 ## What is it?
 
-Contensis importer provides a series of interfaces to easily perform bulk entry extract or loading to and/or from any Contensis instance
+Contensis importer provides a series of interfaces to easily perform bulk entry extract or migration to and/or from any Contensis instance
 
 ### Get started
 
@@ -89,11 +89,14 @@ Either approach works the same, it can be a preferred coding style or it may be 
 
 #### Connection details
 
-If you are already familiar with the Migratortron and how entry load operations work this is almost exactly the same.
+The easiest way to familiarise yourself is to get up and running straight away. Create an importer using one of the methods above and examine the availalble options to set `source`, `target` and other import parameters. A complete example of defining connections is in the [example project](https://github.com/zengenti/contensis-importer/blob/main/packages/import-test-project/src/connections.ts)
 
-The best way to get familiar is to create an importer using one of the methods above and examine the availalble options to set `source`, `target` and other import parameters. A complete example of defining connections is in the [example project](https://github.com/zengenti/contensis-importer/blob/main/packages/import-test-project/src/connections.ts)
+Any parameters you set when creating the importer are used as defaults when calling any importer methods, however you can also supply options that override these when calling any importer method and set different parameters for the importer methods you use.
 
-Any parameters you set when creating the importer are used as defaults when calling any importer methods, however you can also override these when calling any importer method and set different parameters for one or any of the importer methods you call. e.g. always `GetEntries` from live CMS and load into the default importer environment - could be dev or live, or just a different Contensis project
+Supported scenarios:
+
+- get entries from a live CMS to load into another environment
+- load entries into a dev or live environment, or another Contensis project
 
 ## Importer methods
 
@@ -148,47 +151,108 @@ Add more keys and discrete content type mappers for the entry types you are hand
 
 Import any entries supplied in `entries` array to the `target` environment in all `projects` supplied
 
+### GetContentModels
+
+Get a list of content types and any dependent components, tag groups, and any default entries or nodes
+
+Provide `contentTypeId`s in the `models[]` option to return just those content types, and their dependent resources
+
+### ImportContentModels
+
+Import any Content Types, Forms, Components or Tag Groups, along with any default entries or site view nodes.
+
 ### ImportNodes
 
-Import any nodes supplied in `nodes` array to the `target` environment in all `projects` supplied.
+Import any site view nodes supplied in `nodes` array to the `target` environment in all `projects` supplied.
 
 - You do not need to supply any ids to create or update nodes (except `entryId`)
 - You must supply all "intermediate" nodes before child nodes if they do not already exist in the target project
   - e.g. for `/my-test/node` you will need to provide a node for `/my-test` as well
 
-## What is doing the heavy lifting here?
+### ImportTags
 
-The core of the extract and loading interfaces use existing Migratortron operations, so all of the useful Migratortron functionality is available with sensible defaults set when using it in the context of a custom bulk entry ETL (extract, transform, load) operation such as any typical entry data import.
+Import any Tags (and any provided parent Tag Groups) into a target environment
 
-The Migratortron library uses an entry loading implementation that is already making the best use of orchestrating the required calls to `contensis-management-api`, offering pre-commit functionality - such as fetching entries with all dependent entries, diffing entries for changes and migration preview - all that can be used here to provide the best experience loading entries into Contensis in a simple, repeatable boilerplate-free implementation
+### ImportTagGroups
 
-## What can I use it for
+Import any Tag Groups you require in your target environment
 
-Any entry ETL (extract, transform, load) operation such as any typical entry data import. We can also migrate any content assets (involving downloading and re-uploading raw files) at the same time in the same entries array, provided the dependent asset entries are returned or manually generated / transformed, then included in the ImportEntries request.
+## Under the Hood
 
-## What are the limitations?
+This library builds on the [Migratortron](https://www.npmjs.com/package/migratortron) package, using its extract/load interfaces with sensible defaults suitable for most content-based ETL (Extract, Transform, Load) operations.
 
-### We need your sys.id
+Migratortron manages key tasks like:
 
-Loading entries with this approach requires all entries have a `sys.id` attached to them. This is fine if you are changing entries that already exist, but if you are generating new entry data from some other source you will need to generate a value for every `sys.id` field in every entry you create. This is so we can create and update entries in a destination/target Contensis project in a repeatable way, and not create a new set of duplicate data every time the import is run. We will always create deterministic guids - i.e. a function that generates the same guid each time it is presented the same unique piece of data.
+- Orchestrating calls to the `contensis-management-api`
+- Automatically resolving linked assets or entries from provided `sys.id`s
+- Diffing with existing content to detect updates
+- Previewing changes before commit
 
-### It could take a while to run
+This allows for a simple, repeatable import process tailored for Contensis, without boilerplate code.
 
-If you're looking to load hundreds or even thousands of entries in one gulp then a committed ImportEntries operation could take minutes, even hours to run to completion.
+---
+
+## What Can I Use This For?
+
+This package is designed to:
+
+- Bulk import or update existing content
+- Migrate data from external sources into Contensis
+- Prepare or sync a Contensis project with content models and other dependencies
+- Upload assets (e.g. images, files), nodes or tags alongside entries
+
+### Importing Assets
+
+Assets can be included in the same import array as entries. To load asset files, set the `sys.uri` field on the asset to one of the following:
+
+- A link to an existing Contensis asset
+- An external HTTP or HTTPS URI
+- A local file-system path (relative or absolute)
+
+The destination folder and filename in Contensis are determined by:
+
+- `sys.properties.filePath` – the target folder path in the CMS
+- `sys.properties.filename` – the filename for the asset
+
+---
+
+## Limitations
+
+### 1. `sys.id` is required
+
+Every entry must include a valid and unique `sys.id`. This is necessary to ensure imports are repeatable and do not create duplicate entries.
+
+When mapping your own data, you must generate a deterministic GUID - one that consistently maps the same input data to the same ID.
+
+### 2. Large imports may take time
+
+Importing hundreds or thousands of entries may take several minutes or more to complete. Performance will depend on the size and complexity of your data.
+
+---
 
 ## Will this do everything for me?
 
-Not everything. This will load entries with the Management API exactly as you present them. The JSON data you are passing to load as entries must fully conform to a valid entry format.
+No - this library focuses on **loading** data into Contensis with the Management API exactly as you present it. You are responsible for:
 
-You must be fully comfortable with creating or mapping potentially complex objects in JavaScript and be prepared to look at lots of raw data inside a debugging session before setting a commit flag on any import you do.
+- Providing fully valid Contensis entry JSON
+- Mapping or transforming your source content
 
-Entry or asset links in your entry data must reference guids that already exist, or be provided as entries (with the same `sys.id` guid) in the same array to be loaded at the same time.
+### Mapping hints
 
-It can't take an array of random data and expect it to be "joined up" for you when it hits Contensis.
+- An entry's content type is identified by the value mapped into `sys.contentTypeId`
+- The same entry can be created or updated as many times as needed with a deterministic guid mapped to the `sys.id`
+- Do not map any `sys.version` as we will always update the latest version so it is not needed here and will be ignored
+- `sys.language` defines the language variation of the entry (do not mix translated variants of the same entry in the same operation)
+- Set `sys.isPublished` to be `true` if you require an entry to be published after it is created or updated.
 
-### Deterministic GUIDs
+Entry fields that link to other assets, entries or tags:
 
-It is crucial that you understand the guid problem - the way Contensis expects asset or entry links to be presented in the Management API and you are implementing a methodology in your entry generation/mapping code to ensure guids can be referenced or generated in a predictable and repeatable way. We often depend on "deterministic guids" methodology here so we can make consistent repeatable guids when applied in different scopes that allow us to create pre-determined entry links (and those linked entries), so the data we provide can be loaded into Contensis fully "joined up", i.e. with all associated asset and/or entry links in place.
+- must reference `sys.id` guids that already exist
+- or be provided for loading at the same time (with a matching `sys.id` guid)
+
+It cannot take an array of incorrectly mapped or invalid JSON and have it automatically "joined up" when it hits Contensis.
+
+Refer to Contensis documentation for examples containing [typical entry JSON](https://www.contensis.com/help-and-docs/apis/management-http/content/entries/update-an-entry)
 
 ## How to use it
 

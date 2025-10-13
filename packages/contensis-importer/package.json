@@ -1,7 +1,7 @@
 {
   "name": "contensis-importer",
   "version": "1.0.0-beta.7",
-  "description": "Easily perform bulk entry extract or loading from or to any Contensis instance",
+  "description": "Bulk load or maintain Contensis content using TypeScript or JavaScript",
   "repository": "https://github.com/zengenti/contensis-importer",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,6 +20,6 @@
   "dependencies": {
     "aguid": "^2.0.0",
     "deep-cleaner": "^1.2.1",
-    "migratortron": "^1.0.0-beta.68"
+    "migratortron": "^1.0.0-beta.80"
   }
 }

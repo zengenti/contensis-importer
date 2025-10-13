@@ -4,26 +4,47 @@ import {
   EntriesResult,
   MigrateRequest,
   SourceCms,
+  TagGroupsResult,
+  TagsResult,
   TargetCms,
 } from 'migratortron';
 import mapJson from 'jsonpath-mapper';
 
-import { Node as DeliveryNode } from 'contensis-delivery-api/lib/models';
-import { Entry, Node } from 'contensis-management-api/lib/models';
+import { ContentType, Component } from 'contensis-core-api';
+import { Node as DeliveryNode } from 'contensis-delivery-api';
+import {
+  Entry,
+  ICreateTag,
+  ICreateTagGroup,
+  Node,
+  Tag,
+  TagGroup,
+} from 'contensis-management-api';
 import {
   DeleteEntriesOptions,
   DeleteNodesOptions,
+  DeleteTagGroupsOptions,
+  DeleteTagsOptions,
   GetContentModelsOptions,
   GetEntriesOptions,
   GetNodesOptions,
+  GetTagGroupsOptions,
+  GetTagsOptions,
   ImportContentModelsOptions,
   ImportEntriesOptions,
   ImportNodesOptions,
+  ImportTagsOptions,
   Mappers,
 } from './models/ImportBase.types';
 import { chooseMapperByFieldValue } from './util/mapping';
 
-type ImportConstructorArgs = MigrateRequest & {};
+type ImportConstructorArgs = Omit<
+  MigrateRequest,
+  'contentTypes' | 'components'
+> & {
+  contentTypes?: ContentType[];
+  components?: Component[];
+};
 
 type ImportConstructor = (
   args: ImportConstructorArgs,
@@ -34,16 +55,26 @@ export class ImportBase implements ImportConstructorArgs {
   commit: boolean;
   source?: MigrateRequest['source'];
   target?: MigrateRequest['target'];
+  /** Content types to import */
+  contentTypes: ContentType[] = [];
+  /** Components to import */
+  components: Component[] = [];
+  /** Entries to import */
   entries: Entry[] = [];
-  models: MigrateRequest['models'] = [];
+  models: string[] = [];
+  /** Nodes to import */
   nodes: Partial<Node | DeliveryNode>[] = [];
+  /** Tag groups to import */
+  tagGroups: (TagGroup | ICreateTagGroup)[] = [];
+  /** Tags to import */
+  tags: (Tag | ICreateTag)[] = [];
   callback?: MigrateRequest['callback'];
   concurrency?: MigrateRequest['concurrency'];
   transformGuids?: MigrateRequest['transformGuids'];
   query?: MigrateRequest['query'];
   zenQL?: MigrateRequest['zenQL'];
-  outputLogs: MigrateRequest['outputLogs'] = 'warning';
-  outputProgress: MigrateRequest['outputProgress'] = true;
+  outputLogs: MigrateRequest['outputLogs'];
+  outputProgress: MigrateRequest['outputProgress'];
   extraArgs: Partial<MigrateRequest>;
 
   constructor(
@@ -54,8 +85,10 @@ export class ImportBase implements ImportConstructorArgs {
       transformGuids = false,
       query,
       zenQL,
-      outputLogs,
-      outputProgress,
+      outputLogs = 'warning',
+      outputProgress = true,
+      contentTypes = [],
+      components = [],
       ...extraArgs
     }: ImportConstructorArgs,
     commit = false
@@ -82,6 +115,8 @@ export class ImportBase implements ImportConstructorArgs {
     this.zenQL = zenQL;
     this.outputLogs = outputLogs;
     this.outputProgress = outputProgress;
+    this.contentTypes = contentTypes;
+    this.components = components;
     this.extraArgs = extraArgs || {};
   }
 
@@ -126,15 +161,27 @@ export class ImportBase implements ImportConstructorArgs {
     projects = (target as TargetCms)?.targetProjects ||
       this.target?.targetProjects,
     models = this.models,
+    contentTypes = this.contentTypes,
+    components = this.components,
+    entries = this.entries,
+    nodes = this.nodes,
+    tags = this.tags,
+    tagGroups = this.tagGroups,
     callback = this.callback,
     outputLogs = this.outputLogs,
     outputProgress = this.outputProgress,
+    ...additionalOptions
   }: ImportContentModelsOptions = {}) => {
     const importer = new ContensisMigrationService(
       {
         ...this.extraArgs,
+        ...additionalOptions,
         target: { ...target, targetProjects: projects },
-        models,
+        models: models.length ? models : [...contentTypes, ...components],
+        entries,
+        nodes,
+        tags,
+        tagGroups,
         callback,
         outputLogs,
         outputProgress,
@@ -159,8 +206,10 @@ export class ImportBase implements ImportConstructorArgs {
     withDependents = true,
     outputLogs = 'warning',
     outputProgress = true,
+    ...additionalOptions
   }: GetEntriesOptions = {}) => {
     const importer = new ContensisMigrationService({
+      ...additionalOptions,
       source: { ...source, project },
       query,
       zenQL,
@@ -223,6 +272,8 @@ export class ImportBase implements ImportConstructorArgs {
     projects = (target as TargetCms)?.targetProjects ||
       this.target?.targetProjects,
     entries = this.entries,
+    tags = this.tags,
+    language = this.query?.languages?.[0],
     callback = this.callback,
     concurrency = this.concurrency,
     outputLogs = this.outputLogs,
@@ -234,6 +285,8 @@ export class ImportBase implements ImportConstructorArgs {
         ...this.extraArgs,
         target: { ...target, targetProjects: projects },
         entries,
+        tags,
+        query: language ? { languages: [language] } : undefined,
         callback,
         concurrency,
         outputLogs,
@@ -261,7 +314,6 @@ export class ImportBase implements ImportConstructorArgs {
     entries = this.entries,
     recycle = false,
     callback = this.callback,
-    concurrency = this.concurrency,
     outputLogs = this.outputLogs,
     outputProgress = this.outputProgress,
     transformGuids = this.transformGuids,
@@ -276,7 +328,6 @@ export class ImportBase implements ImportConstructorArgs {
         target: { ...target, targetProjects: projects },
         entries,
         callback,
-        concurrency,
         outputLogs,
         outputProgress,
         transformGuids,
@@ -284,6 +335,198 @@ export class ImportBase implements ImportConstructorArgs {
       !this.commit
     );
     return importer.DeleteEntries(recycle);
+  };
+  /**
+   * Get tags from an import "source" CMS filtering results by a provided query
+   * @param options override options set in the import constructor and set specific options when getting tags for this query
+   * @returns list of tags returned from the Management API, includes TagGroups if withDependents is true
+   */
+  GetTags = async (
+    {
+      source = this.source || ({} as SourceCms),
+      project = (source as SourceCms)?.project || this.source?.project || '',
+      query,
+      withDependents,
+      outputLogs = this.outputLogs,
+      outputProgress = this.outputProgress,
+      ...additionalOptions
+    }: GetTagsOptions = {} as GetTagsOptions
+  ) => {
+    const importer = new ContensisMigrationService({
+      ...additionalOptions,
+      source: { ...source, project },
+      outputLogs,
+      outputProgress,
+    });
+    return await importer.GetTags({
+      ...query,
+      withDependents: withDependents ?? false,
+    });
+  };
+
+  /**
+   * Migrate provided list of tags to projects specfied in an import "target" CMS
+   * Tags will be checked against the target for validity and existance
+   * This should be used for bulk operations and NOT for looping over to do atomic transactions
+   * (this is what the Management API is for and will be much faster to load single entries in this fashion)
+   * ImportTags respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
+   * @param options provide a list of tags to import and override options set in the import constructor to set specific options for this import
+   * @returns [Error, MigrateResult] tuple
+   */
+  ImportTags = ({
+    target = this.target || ({} as TargetCms),
+    projects = (target as TargetCms)?.targetProjects ||
+      this.target?.targetProjects,
+    tags = this.tags,
+    tagGroups = this.tagGroups,
+    concurrency = this.concurrency,
+    outputLogs = this.outputLogs,
+    outputProgress = this.outputProgress,
+    transformGuids = this.transformGuids,
+  }: ImportTagsOptions = {}) => {
+    const importer = new ContensisMigrationService(
+      {
+        ...this.extraArgs,
+        target: { ...target, targetProjects: projects },
+        tags,
+        tagGroups,
+        concurrency,
+        outputLogs,
+        outputProgress,
+        transformGuids,
+      },
+      !this.commit
+    );
+    return importer.MigrateTags();
+  };
+
+  /**
+   * Delete provided list of tags in projects specfied as a "target" CMS
+   * Tags will be checked against the target for validity and existance
+   * This should be used for bulk operations and NOT for looping over to do atomic transactions
+   * (this is what the Management API is for and will be much faster to load single entries in this fashion)
+   * DeleteTags respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
+   * @param options provide a list of tags to delete and override options set in the import constructor to set specific options for this import
+   * @returns [Error, MigrateResult] tuple
+   */
+  DeleteTags = async ({
+    target = this.target || ({} as TargetCms),
+    projects = (target as TargetCms)?.targetProjects ||
+      this.target?.targetProjects,
+    tags = this.tags,
+    query,
+    outputLogs = this.outputLogs,
+    outputProgress = this.outputProgress,
+  }: DeleteTagsOptions = {}): Promise<
+    [Error | null, TagsResult | undefined]
+  > => {
+    if (!tags.length)
+      return [new Error('No tags supplied to delete'), undefined];
+    const importer = new ContensisMigrationService(
+      {
+        ...this.extraArgs,
+        target: { ...target, targetProjects: projects },
+        tags,
+        outputLogs,
+        outputProgress,
+      },
+      !this.commit
+    );
+    return importer.DeleteTags(query);
+  };
+  /**
+   * Get tag groups from an import "source" CMS filtering results by a provided query
+   * @param options override options set in the import constructor and set specific options when getting tag groups for this query
+   * @returns Promise that resolves to a list of tag groups returned from the Management API
+   */
+  GetTagGroups = async (
+    {
+      source = this.source || ({} as SourceCms),
+      project = (source as SourceCms)?.project || this.source?.project || '',
+      query,
+      outputLogs = this.outputLogs,
+      outputProgress = this.outputProgress,
+      ...additionalOptions
+    }: GetTagGroupsOptions = {} as GetTagGroupsOptions
+  ) => {
+    const importer = new ContensisMigrationService({
+      ...additionalOptions,
+      source: { ...source, project },
+      outputLogs,
+      outputProgress,
+    });
+    return await importer.GetTagGroups(query);
+  };
+
+  /**
+   * Migrate provided list of tags to projects specfied in an import "target" CMS
+   * Tags will be checked against the target for validity and existance
+   * This should be used for bulk operations and NOT for looping over to do atomic transactions
+   * (this is what the Management API is for and will be much faster to load single entries in this fashion)
+   * ImportTags respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
+   * @param options provide a list of tags to import and override options set in the import constructor to set specific options for this import
+   * @returns [Error, MigrateResult] tuple
+   */
+  ImportTagGroups = ({
+    target = this.target || ({} as TargetCms),
+    projects = (target as TargetCms)?.targetProjects ||
+      this.target?.targetProjects,
+    tags = this.tags,
+    tagGroups = this.tagGroups,
+    concurrency = this.concurrency,
+    outputLogs = this.outputLogs,
+    outputProgress = this.outputProgress,
+    transformGuids = this.transformGuids,
+  }: ImportTagsOptions = {}) => {
+    const importer = new ContensisMigrationService(
+      {
+        ...this.extraArgs,
+        target: { ...target, targetProjects: projects },
+        tags,
+        tagGroups,
+        concurrency,
+        outputLogs,
+        outputProgress,
+        transformGuids,
+      },
+      !this.commit
+    );
+    return importer.MigrateTags();
+  };
+
+  /**
+   * Delete provided list of tag groups in projects specfied as a "target" CMS
+   * Tag groups will be checked against the target for validity and existance
+   * This should be used for bulk operations and NOT for looping over to do atomic transactions
+   * (this is what the Management API is for and will be much faster to load single entries in this fashion)
+   * DeleteTagGroups respects the "commit" flag set in the import constructor or in "process.env.COMMIT"
+   * @param options provide a list of tag groups to delete and override options set in the import constructor to set specific options for this import
+   * @returns [Error, MigrateResult] tuple
+   */
+  DeleteTagGroups = async ({
+    target = this.target || ({} as TargetCms),
+    projects = (target as TargetCms)?.targetProjects ||
+      this.target?.targetProjects,
+    tagGroups = this.tagGroups,
+    query,
+    outputLogs = this.outputLogs,
+    outputProgress = this.outputProgress,
+  }: DeleteTagGroupsOptions = {}): Promise<
+    [Error | null, TagGroupsResult | undefined]
+  > => {
+    if (!tagGroups.length)
+      return [new Error('No tag groups supplied to delete'), undefined];
+    const importer = new ContensisMigrationService(
+      {
+        ...this.extraArgs,
+        target: { ...target, targetProjects: projects },
+        tagGroups,
+        outputLogs,
+        outputProgress,
+      },
+      !this.commit
+    );
+    return importer.DeleteTagGroups(query);
   };
 
   /**

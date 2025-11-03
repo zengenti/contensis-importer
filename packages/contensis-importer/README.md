@@ -1,4 +1,4 @@
-# [![Contensis](https://github.com/contensis/cli/raw/refs/heads/main/assets/contensis-logo--tiny.svg)](https://www.contensis.com)  Contensis Importer [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![NPM version](https://img.shields.io/npm/v/contensis-importer.svg?style=flat)](https://www.npmjs.com/package/contensis-importer)
+# [![Contensis](https://github.com/contensis/cli/raw/refs/heads/main/assets/contensis-logo--tiny.svg)](https://www.contensis.com) Contensis Importer [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![NPM version](https://img.shields.io/npm/v/contensis-importer.svg?style=flat)](https://www.npmjs.com/package/contensis-importer)
 
 Bulk load or maintain Contensis content using TypeScript or JavaScript
 
@@ -60,12 +60,14 @@ In your `package.json`, add:
 "scripts": {
   "build": "tsc",
   "start": "node index.js",
+  "prestart": "npm run build",
   "import:dev": "cross-env TARGET=dev COMMIT=false node index.js"
 }
 ```
 
 - `build` will compile the TypeScript code into JavaScript files
 - `start` will run your script from the compiled JavaScript
+- `prestart` build the script each time so we always run it with the latest changes
 - `import:dev` is an example expanding the reach of your importer to specify environment variables before running your script so you could run your importer with different conditions in multiple contexts
 
 ### 5. Create an import script
@@ -96,8 +98,7 @@ run();
 Build and run the script:
 
 ```bash
-npm run build
-npm run start
+npm start
 ```
 
 ## Usage styles
@@ -115,12 +116,32 @@ const importer = createImport({
 
 const runImport = async () => {
   const entries = await importer.GetEntries({
-    zenQL: 'sys.contentTypeId = news',
+    zenQL: 'sys.contentTypeId IN (news, author)',
   });
-  const mappedEntries = importer.MapEntries(entries, {
-    news: entry => {
-      entry.headline += ' - updated';
-      return entry;
+  const mappedEntries = contensis.MapEntries(entries, {
+    /* key must match the contentTypeId of each entry to map it */
+    news: article => {
+      /* map a new field */
+      article.channel = 'web';
+
+      /* update an existing field */
+      if (article.headline) {
+        article.headline = `${article.headline} - updated`;
+      }
+
+      /* map a field that links to another entry */
+      article.department = {
+        sys: { id: '/* entry guid */', contentTypeId: 'department' },
+      };
+
+      /* map a field with a link to another entry that we retrieved */
+      article.author = entries.find(
+        e =>
+          e.userId === article.sys.version?.createdBy &&
+          e.sys.contentTypeId === 'author'
+      );
+
+      return article;
     },
   });
   await importer.ImportEntries({ entries: mappedEntries });
@@ -233,6 +254,8 @@ It cannot take an array of incorrectly mapped or invalid JSON and have it automa
 - Use `sys.language` for different translations (do not mix language variations in a single operation)
 - Set `sys.isPublished` to `true` if you want the entry to be published after it is created or updated.
 
+Create canvas fields from scraped HTML with the help of [@contensis/html-canvas](https://github.com/contensis/canvas/tree/main/packages/html-canvas#usage) package in your entry mapping
+
 Entry fields that reference assets, entries or tags:
 
 - Must reference existing `sys.id` values
@@ -246,12 +269,15 @@ To import assets, include them in the same array as entries and set:
 - `sys.properties.filename` - desired filename in the CMS
 
 ### Deterministic GUIDs
+
 Guarantee that input values are truly unique when generating deterministic GUIDs, a GUID will not be unique if it has been generated using the same input as another process doing the same job:
+
 - sequential numbers such as 1, 2, 3 could be used in another resource type
 - avoid using any values that could ever change, each change in between imports will result in a duplicate entry with a different `sys.id`
 - create your own "composite key" that guarantees uniqueness and avoids potential clashes when generating GUIDs from different contexts (e.g. future content imports)
 
 Build unique composite keys for deterministic GUID generation using data that never changes:
+
 - An existing ID field
 - Records containing a unique combination of data in fields
 - Data with no discernable ID? Do your best, tread very carefully with future imports
@@ -400,4 +426,3 @@ const [error, result] = await importer.ImportTagGroups({ tagGroups });
 - [Migratortron on npm](https://www.npmjs.com/package/migratortron)
 - [Contensis CLI](https://github.com/contensis/cli/blob/main/packages/contensis-cli/README.md#contensis-shell)
 - [Contensis Management API docs](https://www.contensis.com/help-and-docs/apis/management-http)
-

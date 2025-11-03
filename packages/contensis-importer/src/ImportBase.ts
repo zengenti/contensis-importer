@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import {
   ContensisMigrationService,
+  ContentTypesResult,
+  EntriesMigrationResult,
   EntriesResult,
   MigrateRequest,
   SourceCms,
@@ -156,7 +158,7 @@ export class ImportBase implements ImportConstructorArgs {
    * @param options provide a list of content types and/or components to import and override options set in the import constructor or set specific options for this import
    * @returns [Error, ContentTypesResult] tuple
    */
-  ImportContentModels = ({
+  ImportContentModels = async ({
     target = this.target || ({} as TargetCms),
     projects = (target as TargetCms)?.targetProjects ||
       this.target?.targetProjects,
@@ -171,7 +173,12 @@ export class ImportBase implements ImportConstructorArgs {
     outputLogs = this.outputLogs,
     outputProgress = this.outputProgress,
     ...additionalOptions
-  }: ImportContentModelsOptions = {}) => {
+  }: ImportContentModelsOptions = {}): Promise<
+    [Error | null, ContentTypesResult | undefined]
+  > => {
+    if (!Array.isArray(contentTypes) || !contentTypes.length)
+      return [new Error('No content types supplied to import'), undefined];
+
     const importer = new ContensisMigrationService(
       {
         ...this.extraArgs,
@@ -266,7 +273,7 @@ export class ImportBase implements ImportConstructorArgs {
    * @param options provide a list of entries to import and override options set in the import constructorto set specific options for this import
    * @returns [Error, MigrateResult] tuple
    */
-  ImportEntries = ({
+  ImportEntries = async ({
     target = this.target || ({} as TargetCms),
     projects = (target as TargetCms)?.targetProjects ||
       this.target?.targetProjects,
@@ -278,7 +285,12 @@ export class ImportBase implements ImportConstructorArgs {
     outputLogs = this.outputLogs,
     outputProgress = this.outputProgress,
     transformGuids = this.transformGuids,
-  }: ImportEntriesOptions = {}) => {
+  }: ImportEntriesOptions = {}): Promise<
+    [Error | null, EntriesMigrationResult | undefined]
+  > => {
+    if (!Array.isArray(entries) || !entries.length)
+      return [new Error('No entries supplied to import'), undefined];
+
     const importer = new ContensisMigrationService(
       {
         ...this.extraArgs,
@@ -319,7 +331,7 @@ export class ImportBase implements ImportConstructorArgs {
   }: DeleteEntriesOptions = {}): Promise<
     [Error | null, EntriesResult | undefined]
   > => {
-    if (!entries.length)
+    if (!Array.isArray(entries) || !entries.length)
       return [new Error('No entries supplied to delete'), undefined];
     const importer = new ContensisMigrationService(
       {
@@ -357,7 +369,7 @@ export class ImportBase implements ImportConstructorArgs {
       outputLogs,
       outputProgress,
     });
-    return await importer.GetTags({
+    return importer.GetTags({
       ...query,
       withDependents: withDependents ?? false,
     });
@@ -372,7 +384,7 @@ export class ImportBase implements ImportConstructorArgs {
    * @param options provide a list of tags to import and override options set in the import constructor to set specific options for this import
    * @returns [Error, MigrateResult] tuple
    */
-  ImportTags = ({
+  ImportTags = async ({
     target = this.target || ({} as TargetCms),
     projects = (target as TargetCms)?.targetProjects ||
       this.target?.targetProjects,
@@ -382,7 +394,12 @@ export class ImportBase implements ImportConstructorArgs {
     outputLogs = this.outputLogs,
     outputProgress = this.outputProgress,
     transformGuids = this.transformGuids,
-  }: ImportTagsOptions = {}) => {
+  }: ImportTagsOptions = {}): Promise<
+    [Error | null, TagsResult | undefined]
+  > => {
+    if (!Array.isArray(tags) || !tags.length)
+      return [new Error('No tags supplied to import'), undefined];
+
     const importer = new ContensisMigrationService(
       {
         ...this.extraArgs,
@@ -454,7 +471,7 @@ export class ImportBase implements ImportConstructorArgs {
       outputLogs,
       outputProgress,
     });
-    return await importer.GetTagGroups(query);
+    return importer.GetTagGroups(query);
   };
 
   /**
@@ -466,7 +483,7 @@ export class ImportBase implements ImportConstructorArgs {
    * @param options provide a list of tags to import and override options set in the import constructor to set specific options for this import
    * @returns [Error, MigrateResult] tuple
    */
-  ImportTagGroups = ({
+  ImportTagGroups = async ({
     target = this.target || ({} as TargetCms),
     projects = (target as TargetCms)?.targetProjects ||
       this.target?.targetProjects,
@@ -477,6 +494,9 @@ export class ImportBase implements ImportConstructorArgs {
     outputProgress = this.outputProgress,
     transformGuids = this.transformGuids,
   }: ImportTagsOptions = {}) => {
+    if (!Array.isArray(tagGroups) || !tagGroups.length)
+      return [new Error('No tag groups supplied to import'), undefined];
+
     const importer = new ContensisMigrationService(
       {
         ...this.extraArgs,
@@ -515,6 +535,7 @@ export class ImportBase implements ImportConstructorArgs {
   > => {
     if (!tagGroups.length)
       return [new Error('No tag groups supplied to delete'), undefined];
+
     const importer = new ContensisMigrationService(
       {
         ...this.extraArgs,
@@ -562,7 +583,7 @@ export class ImportBase implements ImportConstructorArgs {
    * @param options provide a list of nodes to import and override options set in the import constructor to set specific options for this import
    * @returns [Error, NodesResult] tuple
    */
-  ImportNodes = ({
+  ImportNodes = async ({
     target = this.target || ({} as TargetCms),
     projects = (target as TargetCms)?.targetProjects ||
       this.target?.targetProjects,
@@ -573,6 +594,9 @@ export class ImportBase implements ImportConstructorArgs {
     outputProgress = this.outputProgress,
     transformGuids = this.transformGuids,
   }: ImportNodesOptions = {}) => {
+    if (!Array.isArray(nodes) || !nodes.length)
+      return [new Error('No nodes supplied to import'), undefined];
+
     const importer = new ContensisMigrationService(
       {
         ...this.extraArgs,

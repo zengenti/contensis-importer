@@ -55,7 +55,7 @@ export const generateNewAsset = (
 };
 
 export const chooseMapperByFieldValue = <
-  S extends Entry,
+  S,
   T extends Mappers<S, any> = Mappers<S, Entry>,
 >(
   entry: S,

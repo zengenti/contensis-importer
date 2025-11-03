@@ -224,23 +224,22 @@ export class ImportBase implements ImportConstructorArgs {
    * Mapping function to take a list of entries from Delivery or Management API along
    * with a keyed object containing mappers for each contentTypeId/field in each entry
    * and return an array of mapped objects
-   * @param {any} entry The source entry we wish to transform
-   * @param {object} mappers Object with keys containing mapper templates,
+   * @param entries The source entries we wish to transform
+   * @param mappers Object with keys containing mapper templates,
    * the key name matching sys.contentTypeId
-   * @param {string} field Only include if we need to match content based on
+   * @param field Only include if we need to match a content type based on
    * a field other than sys.contentTypeId in the source data
-   * @returns {object} Object transformed using a matched content type or
-   * a default mapper template, returns an empty object if no mapper template
-   * couild be applied.
+   * @returns Array of entries transformed using a matched content type,
+   * returns an empty array if no mapper templates could be applied.
    */
-  MapEntries = <T extends Entry = Entry, S extends Entry = Entry>(
-    entries: Entry[] | S[],
-    mappers: Mappers<S, T>,
-    field = 'sys.contentTypeId'
+  MapEntries = <S = Entry>(
+    entries: S[],
+    mappers: Mappers<S, Entry>,
+    field: string = 'sys.contentTypeId'
   ) => {
-    const results = [] as T[];
-    entries.forEach(entry => {
-      const mapper = chooseMapperByFieldValue<S, Mappers<S, T>>(
+    const results = [] as Entry[];
+    for (const entry of entries) {
+      const mapper = chooseMapperByFieldValue<S, Mappers<S, any>>(
         entry as S,
         mappers,
         field
@@ -250,10 +249,10 @@ export class ImportBase implements ImportConstructorArgs {
           source: entries as S[],
           results,
         });
-        if (result) results.push(result as T);
+        if (result) results.push(result);
       } else if (mapper && typeof mapper === 'object')
         results.push(mapJson(entry as S, mapper));
-    });
+    }
 
     return results;
   };

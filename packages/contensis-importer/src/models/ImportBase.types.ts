@@ -160,8 +160,8 @@ export type DeleteNodesOptions = {
   concurrency?: MigrateRequest['concurrency'];
 } & LoggingOptions;
 
-export type Mappers<S extends Entry = Entry, T extends Entry = Entry> = {
+export type Mappers<S = Entry, T extends Entry = Entry> = {
   [contentTypeId: string]:
     | MappingTemplate<S>
-    | ((json: any, modifiers: { source: S[]; results: T[] }) => T | S);
+    | ((json: S, modifiers: { source: S[]; results: T[] }) => T | S);
 };
